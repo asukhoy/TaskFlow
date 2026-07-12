@@ -44,4 +44,9 @@ public class ProjectService {
         var saved = repository.save(projectEntity);
         return mapper.toDomain(saved);
     }
+
+    public Project getProjectById(Long id) {
+        var projectEntity = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Project with id: " + id + " not found"));
+        return mapper.toDomain(projectEntity);
+    }
 }
