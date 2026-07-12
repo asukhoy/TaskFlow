@@ -2,8 +2,10 @@ package TaskFlow.demo.projects;
 
 import org.springframework.stereotype.Component;
 
+import TaskFlow.demo.Mapper;
+
 @Component
-public class ProjectMapper {
+public class ProjectMapper implements Mapper<Project, ProjectEntity> {
     public Project toDomain(ProjectEntity project) {
         return new Project(
             project.getId(),
