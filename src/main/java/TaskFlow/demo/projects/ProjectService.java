@@ -49,4 +49,12 @@ public class ProjectService {
         var projectEntity = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Project with id: " + id + " not found"));
         return mapper.toDomain(projectEntity);
     }
+
+    public boolean deleteProject(Long id) {
+        if (repository.existsById(id)) {
+            repository.deleteById(id);
+            return true;
+        }
+        return false;
+    }
 }
