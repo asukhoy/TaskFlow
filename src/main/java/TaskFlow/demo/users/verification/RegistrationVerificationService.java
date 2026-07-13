@@ -20,10 +20,6 @@ public class RegistrationVerificationService {
         if (!email.contains("@")) {
             throw new IllegalArgumentException("Email must contain @.");
         }
-        var user = repository.findByEmail(email);
-        if (user == null) {
-            return true;
-        }
-        return false;
+        return repository.existsByEmail(email);
     }
 }
