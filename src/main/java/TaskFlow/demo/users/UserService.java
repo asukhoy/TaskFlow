@@ -28,7 +28,7 @@ public class UserService {
     public User registerUser(User user) {
         var check = verificationService.isRegistrationAvailable(user.email());
         if (!check) {
-            throw new UserAlreadyExistsException("User with this email adress: " + user.email() + "exists.");
+            throw new UserAlreadyExistsException("User with this email adress: " + user.email() + " exists.");
         }
         var entity = mapper.toEntity(user);
         var saved = repository.save(entity);
