@@ -14,6 +14,7 @@ import jakarta.persistence.EntityNotFoundException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,10 +37,14 @@ class UserServiceTest {
 
     @BeforeEach
     void setUp() {
-        userEntity = new UserEntity();
-        userEntity.setId(1L);
-        userEntity.setEmail("developer@taskflow.com");
-        userEntity.setRole(UserRole.USER);
+        userEntity = new UserEntity(
+            1L,
+            "A",
+            "developer@taskflow.com",
+            "123",
+            UserRole.ADMIN
+        );
+        
 
         userDto = new User(
             1L,
@@ -52,15 +57,21 @@ class UserServiceTest {
 
     @Test
     @DisplayName("Успешный поиск пользователя по ID")
-    void getUserById_ShouldReturnUser_WhenUserExists() {
-        when(userRepository.findById(1L)).thenReturn(Optional.of(userEntity));
+    void getUserById_Success() {
+        when(userRepository.findById(userEntity.getId())).thenReturn(Optional.of(userEntity));
         when(userMapper.toDomain(userEntity)).thenReturn(userDto);
 
-        User result = userService.getUserById(1L);
+        User result = userService.getUserById(userEntity.getId());
 
         assertNotNull(result);
-        assertEquals("developer@taskflow.com", result.email());
-        verify(userRepository, times(1)).findById(1L);
+        assertEquals(userEntity.getId(), result.id());
+        assertEquals(userEntity.getName(), result.name());
+        assertEquals(userEntity.getEmail(), result.email());
+        assertEquals(userEntity.getPassword(), result.password());
+        assertEquals(userEntity.getRole(), result.role());
+
+        verify(userRepository).findById(userEntity.getId());
+        verify(userMapper).toDomain(userEntity);
     }
 
     @Test
@@ -68,14 +79,17 @@ class UserServiceTest {
     void getUserById_ShouldThrow() {
         when(userRepository.findById(2L)).thenReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> {userService.getUserById(2L);});
+        var exception = assertThrows(EntityNotFoundException.class, () -> {userService.getUserById(2L);});
 
-        verify(userRepository, times(1)).findById(2L);
+        assertEquals("Not found user by id: 2", exception.getMessage());
+
+        verify(userRepository).findById(2L);
+        verify(userMapper, never()).toDomain(any());
     }
 
     @Test
     @DisplayName("Выброс исключения, если пользователь с таким Email уже существует")
-    void createUser_ShouldThrowException_WhenEmailAlreadyExists() {
+    void registerUser_ShouldThrowException_WhenEmailAlreadyExists() {
         when(verificationService.isRegistrationAvailable(userDto.email())).thenReturn(false);
 
         var exception = assertThrows(UserAlreadyExistsException.class, () -> {
