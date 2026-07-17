@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import TaskFlow.demo.Mapper;
-import TaskFlow.demo.users.User;
 import TaskFlow.demo.users.UserRepository;
 import TaskFlow.demo.users.UserRole;
 import jakarta.persistence.EntityNotFoundException;
@@ -27,19 +26,22 @@ public class ProjectService {
     }
 
     public Project createProject(Project project) {
-        var entity = mapper.toEntity(project);
         var user = userRepository.findById(project.userId()).orElseThrow(() -> new EntityNotFoundException("Not found user by id: " + project.userId()));
         if (user.getRole() != UserRole.ADMIN) {
             throw new IllegalAccessError("User must be admin");
         }
+        var entity = mapper.toEntity(project);
         entity.setUser(user);
         var saved = repository.save(entity);
         return mapper.toDomain(saved);
     }
 
-    public Project changeOwner(Long projectId, User user) {
+    public Project changeOwner(Long projectId, Long userId) {
         var projectEntity = repository.findById(projectId).orElseThrow(() -> new EntityNotFoundException("Project with id: " + projectId + " not found"));
-        var userEntity = userRepository.findById(user.id()).orElseThrow(() -> new EntityNotFoundException("User with id: " + user.id() + " not found"));
+        var userEntity = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("User with id: " + userId + " not found"));
+        if (userEntity.getRole() != UserRole.ADMIN) {
+            throw new IllegalAccessError("User must be admin");
+        }
         projectEntity.setUser(userEntity);
         var saved = repository.save(projectEntity);
         return mapper.toDomain(saved);
